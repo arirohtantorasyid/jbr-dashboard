@@ -32,6 +32,7 @@
       border: none;
       color: white;
       cursor: pointer;
+      border-radius: 8px;
     }
     .result {
       background: #1f1f1f;
@@ -66,12 +67,15 @@
     #reader {
       width: 300px;
       margin: 20px auto;
+      display: none;
     }
   </style>
 </head>
 <body>
   <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
+
   <h2>📷 Scan Barcode QR Anggota</h2>
+  <button id="btnScan" onclick="mulaiScan()">📸 Klik untuk Scan QR</button>
   <div id="reader"></div>
 
   <h2>🔍 Atau Masukkan ID QR Manual</h2>
@@ -151,28 +155,42 @@
       tampilkanAnggota(input);
     }
 
-    loadData();
+    async function mulaiScan() {
+      const reader = document.getElementById("reader");
+      const btn = document.getElementById("btnScan");
+      reader.style.display = "block";
+      btn.style.display = "none";
 
-    // QR Scan logic
-    const html5QrCode = new Html5Qrcode("reader");
-    Html5Qrcode.getCameras().then(cameras => {
-      if (cameras && cameras.length) {
-        html5QrCode.start(
-          cameras[0].id,
-          { fps: 10, qrbox: 200 },
-          qrCodeMessage => {
-            document.getElementById("qrInput").value = qrCodeMessage;
-            tampilkanAnggota(qrCodeMessage.trim().toUpperCase());
-            html5QrCode.stop();
-          },
-          errorMessage => {
-            // ignore
-          }
-        );
+      const html5QrCode = new Html5Qrcode("reader");
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length) {
+          html5QrCode.start(
+            cameras[0].id,
+            { fps: 10, qrbox: 200 },
+            qrCodeMessage => {
+              const id = qrCodeMessage.trim().toUpperCase();
+              document.getElementById("qrInput").value = id;
+              tampilkanAnggota(id);
+              html5QrCode.stop().then(() => {
+                reader.style.display = "none";
+                btn.style.display = "inline-block";
+              });
+            },
+            errorMessage => {
+              // ignore error
+            }
+          );
+        } else {
+          alert("Kamera tidak ditemukan.");
+        }
+      } catch (err) {
+        alert("Gagal mengakses kamera.");
+        console.error(err);
       }
-    }).catch(err => {
-      console.error("Tidak bisa mengakses kamera", err);
-    });
+    }
+
+    loadData();
   </script>
 
   <p class="copyright">
