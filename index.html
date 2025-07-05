@@ -26,7 +26,7 @@
       margin-bottom: 10px;
     }
     button {
-      padding: 8px 20px;
+      padding: 10px 20px;
       font-size: 16px;
       background-color: #ff4444;
       border: none;
@@ -137,8 +137,8 @@
 
     function tampilkanAnggota(id) {
       const result = document.getElementById("hasilScan");
-      if (dataAnggota[id]) {
-        const anggota = dataAnggota[id];
+      const anggota = dataAnggota[id];
+      if (anggota) {
         document.getElementById("nama").innerText = anggota.nama;
         document.getElementById("username").innerText = "@" + anggota.username;
         document.getElementById("statusLive").innerText = anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
@@ -166,7 +166,7 @@
       try {
         const cameras = await Html5Qrcode.getCameras();
         if (cameras && cameras.length) {
-          html5QrCode.start(
+          await html5QrCode.start(
             cameras[0].id,
             { fps: 10, qrbox: 200 },
             qrCodeMessage => {
@@ -179,14 +179,14 @@
               });
             },
             errorMessage => {
-              // bisa diabaikan
+              // error bisa diabaikan
             }
           );
         } else {
           alert("Kamera tidak ditemukan.");
         }
       } catch (err) {
-        alert("Gagal mengakses kamera. Pastikan sudah diizinkan.");
+        alert("Gagal mengakses kamera. Pastikan Anda sudah mengizinkannya.");
         console.error(err);
       }
     }
