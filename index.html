@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard JBR Family</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -57,12 +58,23 @@
     .live { color: limegreen; font-weight: bold; }
     .offline { color: gray; }
     .komal { color: orange; }
-    .lokasi { margin-top: 10px; font-style: italic; font-size: 14px; color: #aaa; }
+    .copyright {
+      margin-top: 60px;
+      font-size: 14px;
+      color: #888;
+    }
+    #reader {
+      width: 300px;
+      margin: 20px auto;
+    }
   </style>
 </head>
 <body>
   <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
-  <h2>🔍 Scan ID QR Anggota</h2>
+  <h2>📷 Scan Barcode QR Anggota</h2>
+  <div id="reader"></div>
+
+  <h2>🔍 Atau Masukkan Manual</h2>
   <input type="text" id="qrInput" placeholder="Masukkan ID QR (misal: JBR001)" />
   <br />
   <button onclick="cekAnggota()">Periksa</button>
@@ -73,7 +85,7 @@
     <p><strong>Username:</strong> <span id="username"></span></p>
     <p><strong>Status LIVE:</strong> <span id="statusLive"></span></p>
     <p><strong>Komal:</strong> <span id="komal"></span></p>
-    <div class="lokasi" id="lokasi"></div>
+    <p><strong>Foto:</strong><br><img id="foto" src="" width="120" style="border-radius:10px;margin-top:10px;" /></p>
   </div>
 
   <h2 style="margin-top: 50px;">📋 Semua Anggota JBR</h2>
@@ -123,35 +135,15 @@
     function cekAnggota() {
       const input = document.getElementById("qrInput").value.trim().toUpperCase();
       const result = document.getElementById("hasilScan");
-      const lokasiDiv = document.getElementById("lokasi");
 
       if (dataAnggota[input]) {
-        document.getElementById("nama").innerText = dataAnggota[input].nama;
-        document.getElementById("username").innerText = "@" + dataAnggota[input].username;
-        document.getElementById("statusLive").innerText = dataAnggota[input].status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
-        document.getElementById("komal").innerText = dataAnggota[input].komal;
+        const anggota = dataAnggota[input];
+        document.getElementById("nama").innerText = anggota.nama;
+        document.getElementById("username").innerText = "@" + anggota.username;
+        document.getElementById("statusLive").innerText = anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
+        document.getElementById("komal").innerText = anggota.komal;
+        document.getElementById("foto").src = anggota.foto || "https://via.placeholder.com/120x120?text=No+Photo";
         result.style.display = "block";
-        lokasiDiv.innerText = "📍 Mendeteksi lokasi...";
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(async (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            try {
-              const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
-              const geoData = await geoRes.json();
-              const lokasi = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.state || "Tidak diketahui";
-              lokasiDiv.innerHTML = `📍 Lokasi saat ini: <strong>${lokasi}</strong><br><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="color:#ff4444;">🌍 Lihat di Google Maps</a>`;
-            } catch {
-              lokasiDiv.innerText = "❗ Gagal mendeteksi nama lokasi.";
-            }
-          }, () => {
-            lokasiDiv.innerText = "❗ Izin lokasi ditolak.";
-          });
-        } else {
-          lokasiDiv.innerText = "❗ Browser tidak mendukung geolokasi.";
-        }
-
       } else {
         alert("ID QR tidak ditemukan.");
         result.style.display = "none";
@@ -159,6 +151,32 @@
     }
 
     loadData();
+
+    const html5QrCode = new Html5Qrcode("reader");
+    Html5Qrcode.getCameras().then(cameras => {
+      if (cameras && cameras.length) {
+        html5QrCode.start(
+          cameras[0].id,
+          {
+            fps: 10,
+            qrbox: 200
+          },
+          qrCodeMessage => {
+            document.getElementById("qrInput").value = qrCodeMessage;
+            cekAnggota();
+            html5QrCode.stop(); // Hentikan scanner setelah berhasil
+          },
+          errorMessage => {
+            // error optional
+          })
+      }
+    }).catch(err => {
+      console.error("Camera not found", err);
+    });
   </script>
+
+  <p class="copyright">
+    © 2025 oleh <strong>Pujangga</strong>. All rights reserved.
+  </p>
 </body>
 </html>
