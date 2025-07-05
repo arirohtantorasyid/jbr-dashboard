@@ -75,6 +75,7 @@
   <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
 
   <h2>📷 Scan Barcode QR Anggota</h2>
+  <p>📌 <strong>Klik tombol kamera di bawah ini untuk mulai scan QR Barcode anggota</strong></p>
   <button id="btnScan" onclick="mulaiScan()">📸 Klik untuk Scan QR</button>
   <div id="reader"></div>
 
@@ -178,14 +179,14 @@
               });
             },
             errorMessage => {
-              // ignore error
+              // bisa diabaikan
             }
           );
         } else {
           alert("Kamera tidak ditemukan.");
         }
       } catch (err) {
-        alert("Gagal mengakses kamera.");
+        alert("Gagal mengakses kamera. Pastikan sudah diizinkan.");
         console.error(err);
       }
     }
