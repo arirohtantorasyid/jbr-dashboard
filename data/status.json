@@ -1,23 +1,23 @@
 {
   "JBR001": {
     "nama": "AKI KETUA 🤝JBR🤝",
-    "username": "ki.lipet",
+    "username": "ki.lipet.",
     "status": "LIVE",
     "komal": "Sendiri",
-    "foto": "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/4c4a607d6a1a260b9efbb7a3c0c9fef3~c5_720x720.jpeg"
+    "foto": "assets/foto-aki.png"
   },
   "JBR002": {
     "nama": "Babeh Anwar",
     "username": "babehanwar1",
     "status": "OFFLINE",
-    "komal": "Komal Orang",
-    "foto": "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/babehanwar1.jpg"
+    "komal": "-",
+    "foto": "assets/foto-babeh.png"
   },
   "JBR003": {
     "nama": "Siti💋🤝JBR🤝",
     "username": "sitti905",
     "status": "LIVE",
-    "komal": "Sendiri",
-    "foto": "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/sitti905.jpg"
+    "komal": "Komal Orang",
+    "foto": "assets/foto-siti.png"
   }
 }
