@@ -57,6 +57,7 @@
     .live { color: limegreen; font-weight: bold; }
     .offline { color: gray; }
     .komal { color: orange; }
+    .lokasi { margin-top: 10px; font-style: italic; font-size: 14px; color: #aaa; }
   </style>
 </head>
 <body>
@@ -72,6 +73,7 @@
     <p><strong>Username:</strong> <span id="username"></span></p>
     <p><strong>Status LIVE:</strong> <span id="statusLive"></span></p>
     <p><strong>Komal:</strong> <span id="komal"></span></p>
+    <div class="lokasi" id="lokasi"></div>
   </div>
 
   <h2 style="margin-top: 50px;">📋 Semua Anggota JBR</h2>
@@ -121,6 +123,7 @@
     function cekAnggota() {
       const input = document.getElementById("qrInput").value.trim().toUpperCase();
       const result = document.getElementById("hasilScan");
+      const lokasiDiv = document.getElementById("lokasi");
 
       if (dataAnggota[input]) {
         document.getElementById("nama").innerText = dataAnggota[input].nama;
@@ -128,6 +131,27 @@
         document.getElementById("statusLive").innerText = dataAnggota[input].status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
         document.getElementById("komal").innerText = dataAnggota[input].komal;
         result.style.display = "block";
+        lokasiDiv.innerText = "📍 Mendeteksi lokasi...";
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            try {
+              const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+              const geoData = await geoRes.json();
+              const lokasi = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.state || "Tidak diketahui";
+              lokasiDiv.innerHTML = `📍 Lokasi saat ini: <strong>${lokasi}</strong><br><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="color:#ff4444;">🌍 Lihat di Google Maps</a>`;
+            } catch {
+              lokasiDiv.innerText = "❗ Gagal mendeteksi nama lokasi.";
+            }
+          }, () => {
+            lokasiDiv.innerText = "❗ Izin lokasi ditolak.";
+          });
+        } else {
+          lokasiDiv.innerText = "❗ Browser tidak mendukung geolokasi.";
+        }
+
       } else {
         alert("ID QR tidak ditemukan.");
         result.style.display = "none";
