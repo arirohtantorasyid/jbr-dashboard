@@ -71,11 +71,10 @@
 </head>
 <body>
   <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
-
   <h2>📷 Scan Barcode QR Anggota</h2>
   <div id="reader"></div>
 
-  <h2>🔍 Atau Masukkan Manual</h2>
+  <h2>🔍 Atau Masukkan ID QR Manual</h2>
   <input type="text" id="qrInput" placeholder="Masukkan ID QR (misal: JBR001)" />
   <br />
   <button onclick="cekAnggota()">Periksa</button>
@@ -107,28 +106,31 @@
     let dataAnggota = {};
 
     async function loadData() {
-      const response = await fetch("data/status.json");
-      dataAnggota = await response.json();
-      const tabel = document.getElementById("tabelIsi");
-      tabel.innerHTML = "";
-      for (const id in dataAnggota) {
-        const a = dataAnggota[id];
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${id}</td>
-          <td>${a.nama}</td>
-          <td>@${a.username}</td>
-          <td class="${a.status === 'LIVE' ? 'live' : 'offline'}">
-            ${a.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE'}
-          </td>
-          <td class="${a.komal === 'Komal Orang' ? 'komal' : ''}">
-            ${a.komal}
-          </td>`;
-        tabel.appendChild(tr);
+      try {
+        const response = await fetch("data/status.json");
+        dataAnggota = await response.json();
+        const tabel = document.getElementById("tabelIsi");
+        tabel.innerHTML = "";
+        for (const id in dataAnggota) {
+          const a = dataAnggota[id];
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${id}</td>
+            <td>${a.nama}</td>
+            <td>@${a.username}</td>
+            <td class="${a.status === 'LIVE' ? 'live' : 'offline'}">
+              ${a.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE'}
+            </td>
+            <td class="${a.komal === 'Komal Orang' ? 'komal' : ''}">${a.komal}</td>
+          `;
+          tabel.appendChild(tr);
+        }
+      } catch (err) {
+        console.error("Gagal memuat data anggota", err);
       }
     }
 
-    function tampilkanData(id) {
+    function tampilkanAnggota(id) {
       const result = document.getElementById("hasilScan");
       if (dataAnggota[id]) {
         const anggota = dataAnggota[id];
@@ -136,7 +138,7 @@
         document.getElementById("username").innerText = "@" + anggota.username;
         document.getElementById("statusLive").innerText = anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
         document.getElementById("komal").innerText = anggota.komal;
-        document.getElementById("foto").src = anggota.foto || "https://via.placeholder.com/120";
+        document.getElementById("foto").src = anggota.foto || "https://via.placeholder.com/120x120?text=No+Photo";
         result.style.display = "block";
       } else {
         alert("ID QR tidak ditemukan.");
@@ -146,22 +148,31 @@
 
     function cekAnggota() {
       const input = document.getElementById("qrInput").value.trim().toUpperCase();
-      tampilkanData(input);
-    }
-
-    // Inisialisasi scanner QR
-    function mulaiScanner() {
-      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-      scanner.render((qrText) => {
-        const kode = qrText.trim().toUpperCase();
-        document.getElementById("qrInput").value = kode;
-        tampilkanData(kode);
-        scanner.clear(); // Stop scanner setelah berhasil
-      });
+      tampilkanAnggota(input);
     }
 
     loadData();
-    mulaiScanner();
+
+    // QR Scan logic
+    const html5QrCode = new Html5Qrcode("reader");
+    Html5Qrcode.getCameras().then(cameras => {
+      if (cameras && cameras.length) {
+        html5QrCode.start(
+          cameras[0].id,
+          { fps: 10, qrbox: 200 },
+          qrCodeMessage => {
+            document.getElementById("qrInput").value = qrCodeMessage;
+            tampilkanAnggota(qrCodeMessage.trim().toUpperCase());
+            html5QrCode.stop();
+          },
+          errorMessage => {
+            // ignore
+          }
+        );
+      }
+    }).catch(err => {
+      console.error("Tidak bisa mengakses kamera", err);
+    });
   </script>
 
   <p class="copyright">
