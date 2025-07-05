@@ -18,6 +18,12 @@
       margin-bottom: 20px;
       border-radius: 16px;
     }
+    #reader {
+      width: 300px;
+      margin: 20px auto;
+      border: 2px dashed #444;
+      padding: 10px;
+    }
     input[type="text"] {
       padding: 10px;
       font-size: 16px;
@@ -63,21 +69,12 @@
       font-size: 14px;
       color: #888;
     }
-    #reader {
-      width: 300px;
-      margin: 20px auto;
-    }
   </style>
 </head>
 <body>
   <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
   <h2>📷 Scan Barcode QR Anggota</h2>
   <div id="reader"></div>
-
-  <h2>🔍 Atau Masukkan Manual</h2>
-  <input type="text" id="qrInput" placeholder="Masukkan ID QR (misal: JBR001)" />
-  <br />
-  <button onclick="cekAnggota()">Periksa</button>
 
   <div class="result" id="hasilScan">
     <h3>Data Anggota</h3>
@@ -109,70 +106,64 @@
       try {
         const response = await fetch("data/status.json");
         dataAnggota = await response.json();
-        const tabel = document.getElementById("tabelIsi");
-        tabel.innerHTML = "";
-        for (const id in dataAnggota) {
-          const a = dataAnggota[id];
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${id}</td>
-            <td>${a.nama}</td>
-            <td>@${a.username}</td>
-            <td class="${a.status === 'LIVE' ? 'live' : 'offline'}">
-              ${a.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE'}
-            </td>
-            <td class="${a.komal === 'Komal Orang' ? 'komal' : ''}">
-              ${a.komal}
-            </td>
-          `;
-          tabel.appendChild(tr);
-        }
       } catch (err) {
         console.error("Gagal memuat data anggota", err);
       }
     }
 
-    function cekAnggota() {
-      const input = document.getElementById("qrInput").value.trim().toUpperCase();
-      const result = document.getElementById("hasilScan");
+    function tampilkanData(id) {
+      const anggota = dataAnggota[id];
+      if (!anggota) return;
 
-      if (dataAnggota[input]) {
-        const anggota = dataAnggota[input];
-        document.getElementById("nama").innerText = anggota.nama;
-        document.getElementById("username").innerText = "@" + anggota.username;
-        document.getElementById("statusLive").innerText = anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
-        document.getElementById("komal").innerText = anggota.komal;
-        document.getElementById("foto").src = anggota.foto || "https://via.placeholder.com/120x120?text=No+Photo";
-        result.style.display = "block";
-      } else {
-        alert("ID QR tidak ditemukan.");
-        result.style.display = "none";
-      }
+      document.getElementById("nama").innerText = anggota.nama;
+      document.getElementById("username").innerText = "@" + anggota.username;
+      document.getElementById("statusLive").innerText = anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
+      document.getElementById("komal").innerText = anggota.komal;
+      document.getElementById("foto").src = anggota.foto || "https://via.placeholder.com/120x120?text=No+Photo";
+      document.getElementById("hasilScan").style.display = "block";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${id}</td>
+        <td>${anggota.nama}</td>
+        <td>@${anggota.username}</td>
+        <td class="${anggota.status === 'LIVE' ? 'live' : 'offline'}">
+          ${anggota.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE'}
+        </td>
+        <td class="${anggota.komal === 'Komal Orang' ? 'komal' : ''}">
+          ${anggota.komal}
+        </td>
+      `;
+      document.getElementById("tabelIsi").appendChild(row);
     }
 
-    loadData();
+    function mulaiScan() {
+      const html5QrCode = new Html5Qrcode("reader");
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          html5QrCode.start(
+            cameras[0].id,
+            { fps: 10, qrbox: 200 },
+            qrCodeMessage => {
+              const id = qrCodeMessage.trim().toUpperCase();
+              if (dataAnggota[id]) {
+                tampilkanData(id);
+              } else {
+                alert("ID QR tidak ditemukan!");
+              }
+              html5QrCode.stop();
+            },
+            errorMessage => {
+              // optional error log
+            }
+          );
+        }
+      }).catch(err => {
+        console.error("Tidak bisa akses kamera", err);
+      });
+    }
 
-    const html5QrCode = new Html5Qrcode("reader");
-    Html5Qrcode.getCameras().then(cameras => {
-      if (cameras && cameras.length) {
-        html5QrCode.start(
-          cameras[0].id,
-          {
-            fps: 10,
-            qrbox: 200
-          },
-          qrCodeMessage => {
-            document.getElementById("qrInput").value = qrCodeMessage;
-            cekAnggota();
-            html5QrCode.stop(); // Hentikan scanner setelah berhasil
-          },
-          errorMessage => {
-            // error optional
-          })
-      }
-    }).catch(err => {
-      console.error("Camera not found", err);
-    });
+    loadData().then(mulaiScan);
   </script>
 
   <p class="copyright">
