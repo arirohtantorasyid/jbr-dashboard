@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard JBR Family</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    img.logo {
+      width: 160px;
+      margin-bottom: 20px;
+      border-radius: 16px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 300px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 8px 20px;
+      font-size: 16px;
+      background-color: #ff4444;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .result {
+      background: #1f1f1f;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 40px;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+    }
+    th {
+      background-color: #222;
+    }
+    tr:nth-child(even) {
+      background-color: #1e1e1e;
+    }
+    .live { color: limegreen; font-weight: bold; }
+    .offline { color: gray; }
+    .komal { color: orange; }
+  </style>
+</head>
+<body>
+  <img src="assets/logo.png" class="logo" alt="Logo JBR Family" />
+  <h2>🔍 Scan ID QR Anggota</h2>
+  <input type="text" id="qrInput" placeholder="Masukkan ID QR (misal: JBR001)" />
+  <br />
+  <button onclick="cekAnggota()">Periksa</button>
+
+  <div class="result" id="hasilScan">
+    <h3>Data Anggota</h3>
+    <p><strong>Nama:</strong> <span id="nama"></span></p>
+    <p><strong>Username:</strong> <span id="username"></span></p>
+    <p><strong>Status LIVE:</strong> <span id="statusLive"></span></p>
+    <p><strong>Komal:</strong> <span id="komal"></span></p>
+  </div>
+
+  <h2 style="margin-top: 50px;">📋 Semua Anggota JBR</h2>
+  <table id="anggotaTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nama</th>
+        <th>Username</th>
+        <th>Status LIVE</th>
+        <th>Komal</th>
+      </tr>
+    </thead>
+    <tbody id="tabelIsi"></tbody>
+  </table>
+
+  <script>
+    let dataAnggota = {};
+
+    async function loadData() {
+      try {
+        const response = await fetch("data/status.json");
+        dataAnggota = await response.json();
+        const tabel = document.getElementById("tabelIsi");
+        tabel.innerHTML = "";
+        for (const id in dataAnggota) {
+          const a = dataAnggota[id];
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${id}</td>
+            <td>${a.nama}</td>
+            <td>@${a.username}</td>
+            <td class="${a.status === 'LIVE' ? 'live' : 'offline'}">
+              ${a.status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE'}
+            </td>
+            <td class="${a.komal === 'Komal Orang' ? 'komal' : ''}">
+              ${a.komal}
+            </td>
+          `;
+          tabel.appendChild(tr);
+        }
+      } catch (err) {
+        console.error("Gagal memuat data anggota", err);
+      }
+    }
+
+    function cekAnggota() {
+      const input = document.getElementById("qrInput").value.trim().toUpperCase();
+      const result = document.getElementById("hasilScan");
+
+      if (dataAnggota[input]) {
+        document.getElementById("nama").innerText = dataAnggota[input].nama;
+        document.getElementById("username").innerText = "@" + dataAnggota[input].username;
+        document.getElementById("statusLive").innerText = dataAnggota[input].status === 'LIVE' ? '✅ LIVE' : '❌ OFFLINE';
+        document.getElementById("komal").innerText = dataAnggota[input].komal;
+        result.style.display = "block";
+      } else {
+        alert("ID QR tidak ditemukan.");
+        result.style.display = "none";
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
